@@ -1,0 +1,19 @@
+#=================================
+# _               _              =
+#| |__   __ _ ___| |__  _ __ ___ =
+#| '_ \ / _` / __| '_ \| '__/ __|=
+#| |_) | (_| \__ \ | | | | | (__ =
+#|_.__/ \__,_|___/_| |_|_|  \___|=
+# ================================
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+alias ls='ls --color=auto'
+export TERM=xterm-256color
+set -o vi
+#PS1='\[\e[0;37m\][\[\e[1;31m\]\t\[\e[0;37m\]][\[\e[0;32m\]\u@\h \[\e[0;37m\]\[\e[1;34m\]\W\[\e[0;37m\]] \[\e[0;32m\]\$ \[\e[0m\]'
+#PS1='[\u@\h \W]$ '
+export EDITOR='vim-huge'
+export PS1="\[$(tput bold)\]\[\033[38;5;37m\]\u\[$(tput sgr0)\]\[$(tput sgr0)\]\[\033[38;5;15m\].\[$(tput sgr0)\]\[\033[38;5;83m\]\W\[$(tput sgr0)\]\[\033[38;5;15m\]: \[$(tput sgr0)\]"
+export PS2=' , '
+export PS3=" : "
