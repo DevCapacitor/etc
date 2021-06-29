@@ -5,17 +5,33 @@
 
 {
   imports =
-    [ (modulesPath + "/profiles/qemu-guest.nix")
+    [ (modulesPath + "/installer/scan/not-detected.nix")
     ];
 
-  boot.initrd.availableKernelModules = [ "ata_piix" "uhci_hcd" "ehci_pci" "sd_mod" "sr_mod" ];
-  boot.initrd.kernelModules = [ ];
+  boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "ahci" "usb_storage" "usbhid" "sd_mod" "sr_mod" "rtsx_pci_sdmmc" ];
+  boot.initrd.kernelModules = [ "dm-snapshot" ];
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
 
-  fileSystems."/" =
-    { device = "/dev/disk/by-uuid/36410953-8ba5-464d-b7fa-9dd122b1a848";
+  fileSystems."root" =
+    { 
+      device = "/dev/disk/by-uuid/3bdbdbc1-c89a-47d4-a574-ba3e66c977f6";
+      mountPoint = "/";
       fsType = "btrfs";
+    };
+    
+  fileSystems."boot" =
+    {
+      device = "/dev/disk/by-uuid/8D43-701C";
+      mountPoint = "/boot";
+      fsType = "vfat";
+    };
+    
+   fileSystems."user" =
+    {
+      device = "/dev/disk/by-uuid/3efcee78-2bc1-4311-9e0a-8105eabfea36";
+      mountPoint = "/home/aviv";
+      fsType = "ext4";
     };
 
   swapDevices = [ ];
