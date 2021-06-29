@@ -1,122 +1,184 @@
-# Edit this configuration file to define what should be installed on
-# your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
-
 { config, pkgs, ... }:
 
 {
   imports =
-    [ # Include the results of the hardware scan.
+    [
       ./hardware-configuration.nix
     ];
 
-  # Use the GRUB 2 boot loader.
-  boot.loader.grub.enable = true;
-  boot.loader.grub.version = 2;
-  # boot.loader.grub.efiSupport = true;
-  # boot.loader.grub.efiInstallAsRemovable = true;
-  # boot.loader.efi.efiSysMountPoint = "/boot/efi";
-  # Define on which hard drive you want to install Grub.
-  boot.loader.grub.device = "/dev/sda"; # or "nodev" for efi only
+  # Use the systemd-boot EFI boot loader.
+  boot = {
+    loader = {
+      grub = {
+        enable = true;
+        version = 2;
+        device = "nodev";
+        efiSupport = true;
+        enableCryptodisk = true;
+      };
+      efi = {
+        canTouchEfiVariables = true;
+        efiSysMountPoint = "/boot";
+      };
+    };
+    initrd.luks.reusePassphrases = true;
+    initrd.luks.devices = {
+      root = {
+        device = "/dev/disk/by-uuid/5f996bea-8c0d-4e33-b858-19323e3f5302";
+        preLVM = true;
+      };
+      user = {
+        device = "/dev/disk/by-uuid/89609626-f197-438d-918b-fe789ff858a3";
+        preLVM = true;
+      };
+    };
+  };
 
-  networking.hostName = "nixos"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+  nixpkgs.config.allowUnfree = true;
+  
+  networking = {
+    hostName = "nixos-20aws1hl002";
+    # wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+    useDHCP = false;
+    interfaces.enp0s25.useDHCP = true;
+    interfaces.wlp0s20u6.useDHCP = true;
+    interfaces.wlp3s0.useDHCP = true;
+    # proxy.default = "http://user:password@proxy:port/";
+    # proxy.noProxy = "127.0.0.1,localhost,internal.domain";
+    # Open ports in the firewall.
+    # firewall.allowedTCPPorts = [ ... ];
+    # firewall.allowedUDPPorts = [ ... ];
+    # Or disable the firewall altogether.
+    # firewall.enable = false;
+  };
 
-  # Set your time zone.
   time.timeZone = "Asia/Jakarta";
 
-  # The global useDHCP flag is deprecated, therefore explicitly set to false here.
-  # Per-interface useDHCP will be mandatory in the future, so this generated config
-  # replicates the default behaviour.
-  networking.useDHCP = false;
-  networking.interfaces.ens3.useDHCP = true;
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
-  console = {
-  #    font = "Lat2-Terminus16";
-    keyMap = "colemak";
+  console.keyMap = "colemak";
+  
+  # List services enable:
+  services = {
+    xserver = {
+      enable = true;
+      displayManager.gdm.enable = true;
+      desktopManager.gnome.enable = true;
+      layout = "us";
+      xkbVariant = "colemak";
+      libinput.enable = true;
+      videoDrivers = [ "modesetting" ];
+      useGlamor = true;
+    };
+    pipewire = {
+      enable = true;
+      alsa.enable = true;
+      alsa.support32Bit = true;
+      pulse.enable = true;
+      # If you want to use JACK applications, uncomment this
+      jack.enable = true;
+      # use the example session manager (no others are packaged yet so this is enabled by default,
+      # no need to redefine it in your config for now)
+      #media-session.enable = true;
+    };
+    # openssh.enable = true;
+    flatpak.enable = true;
+    printing.enable = true;
   };
 
-  # Enable the X11 windowing system.
-  # services.xserver.enable = true;
+  # List services configure:
+  services = {
+    gnome = {
+      games.enable = false;
+      chrome-gnome-shell.enable = true;
+    };
+  };
+
+  hardware = {
+    opengl = {
+      driSupport = true;
+      driSupport32Bit = true;
+      extraPackages = [
+        pkgs.intel-compute-runtime
+        pkgs.intel-media-driver
+        pkgs.vaapiIntel         
+        pkgs.vaapiVdpau
+        pkgs.libvdpau-va-gl
+      ];
+    };
+    pulseaudio.enable = false;
+    bluetooth.enable = true;
+  }; 
+  # rtkit is optional but recommended
+  security.rtkit.enable = true;
 
 
-  
-
-  # Configure keymap in X11
-  # services.xserver.layout = "us";
-  # services.xserver.xkbOptions = "eurosign:e";
-
-  # Enable CUPS to print documents.
-  # services.printing.enable = true;
-
-  # Enable sound.
-  sound.enable = true;
-  hardware.pulseaudio.enable = true;
-
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
-
-  # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.aviv = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [ "wheel" "networkmanager"];
   };
 
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
-  environment.systemPackages = with pkgs; [
-  # filesystem support
-    exfat
-    e2fsprogs
-    f2fs-tools
-    dosfstools
-    hfsprogs
-    jfsutils
-    util-linux
-    cryptsetup
-    lvm2
-    nilfs-utils
-    ntfs3g
-    udftools
-    xfsprogs
-    zfs
-    btrfs-progs
-  # internet
-    wget
-    curl
-  ];
+  # List packages installed in system profile.
+  environment = {
+    systemPackages = with pkgs; [
+      # graphic
+      gimp
+      # office
+      libreoffice
+      # customize
+      gnome.gnome-tweaks
+      nordic
+      nordic-polar
+      papirus-icon-theme
+      capitaine-cursors
+      # Media
+      celluloid
+      # FileSystemSupport
+      exfat
+      e2fsprogs
+      f2fs-tools
+      dosfstools
+      hfsprogs
+      jfsutils
+      util-linux
+      cryptsetup
+      lvm2
+      nilfs-utils
+      ntfs3g
+      udftools
+      xfsprogs
+      zfs
+      btrfs-progs
+      # SystemTools
+      nano
+      wget
+      gparted
+      # Internet
+      firefox
+      discord
+      #gnomeExtension
+      gnomeExtensions.dash-to-dock
+      gnomeExtensions.dash-to-panel
+      gnomeExtensions.just-perfection
+      gnomeExtensions.user-themes
+      gnomeExtensions.caffeine
+      gnomeExtensions.clipboard-indicator
+      gnomeExtensions.panel-osd
+      gnomeExtensions.topicons-plus
+      gnomeExtensions.gsconnect
+      gnomeExtensions.remove-dropdown-arrows
+      gnomeExtensions.status-area-horizontal-spacing
+    ];
+  };
 
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
+ programs = {
+   mtr.enable = true;
+   gnupg.agent = {
+     enable = true;
+     enableSSHSupport = true;
+   };
+  steam.enable = true;
+ };
 
-  # List services that you want to enable:
-
-  # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
-
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "21.05"; # Did you read the comment?
+  system.stateVersion = "21.05";
 
 }
