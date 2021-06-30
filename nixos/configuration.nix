@@ -1,12 +1,10 @@
 { config, pkgs, ... }:
 
 {
-  imports =
-    [
+  imports = [
       ./hardware-configuration.nix
     ];
 
-  # Use the systemd-boot EFI boot loader.
   boot = {
     loader = {
       grub = {
@@ -33,6 +31,30 @@
       };
     };
   };
+
+  fileSystems."root" =
+  { 
+    device = "/dev/disk/by-uuid/3bdbdbc1-c89a-47d4-a574-ba3e66c977f6";
+    mountPoint = "/";
+    options = [ "noatime" "nodiratime" "discard" ];
+    fsType = "btrfs";
+  };
+    
+  fileSystems."boot" =
+  {
+    device = "/dev/disk/by-uuid/8D43-701C";
+    mountPoint = "/boot";
+    options = [ "noatime" "nodiratime" "discard" ];
+    fsType = "vfat";
+  };
+    
+  fileSystems."user" =
+  {
+    device = "/dev/disk/by-uuid/3efcee78-2bc1-4311-9e0a-8105eabfea36";
+    mountPoint = "/home/aviv";
+    fsType = "ext4";
+  };
+
 
   nixpkgs.config.allowUnfree = true;
   
@@ -81,6 +103,8 @@
       #media-session.enable = true;
     };
     # openssh.enable = true;
+    earlyoom.enable = true;
+    fstrim.enable = true;
     flatpak.enable = true;
     printing.enable = true;
   };
@@ -105,16 +129,33 @@
         pkgs.libvdpau-va-gl
       ];
     };
+    cpu.intel.updateMicrocode = true;
     pulseaudio.enable = false;
     bluetooth.enable = true;
   }; 
   # rtkit is optional but recommended
-  security.rtkit.enable = true;
+  security = {
+    rtkit.enable = true;
+    sudo.enable = false;
+    doas = {
+      enable = true;
+      wheelNeedsPassword = true;
+      extraRules = [
+        { groups = [ "wheel" ]; noPass = false; keepEnv = true; persist = true; }
+      ];
+    };
+  };
 
-
-  users.users.aviv = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" "networkmanager"];
+  users = {
+    users.aviv = {
+      isNormalUser = true;
+      extraGroups = [ "wheel" "networkmanager"];
+    };
+  };
+  
+  nix = {
+    allowedUsers = [ "aviv" ];
+    trustedUsers = [ "root" "aviv" ];
   };
 
   # List packages installed in system profile.
@@ -170,14 +211,14 @@
     ];
   };
 
- programs = {
-   mtr.enable = true;
-   gnupg.agent = {
-     enable = true;
-     enableSSHSupport = true;
-   };
-  steam.enable = true;
- };
+  programs = {
+    mtr.enable = true;
+    gnupg.agent = {
+      enable = true;
+      enableSSHSupport = true;
+    };
+   steam.enable = true;
+  };
 
   system.stateVersion = "21.05";
 
