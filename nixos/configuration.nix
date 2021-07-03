@@ -121,12 +121,12 @@
     opengl = {
       driSupport = true;
       driSupport32Bit = true;
-      extraPackages = [
-        pkgs.intel-compute-runtime
-        pkgs.intel-media-driver
-        pkgs.vaapiIntel         
-        pkgs.vaapiVdpau
-        pkgs.libvdpau-va-gl
+      extraPackages = with pkgs; [
+        intel-compute-runtime
+        intel-media-driver
+        vaapiIntel         
+        vaapiVdpau
+        libvdpau-va-gl
       ];
     };
     cpu.intel.updateMicrocode = true;
