@@ -68,10 +68,44 @@
     # proxy.default = "http://user:password@proxy:port/";
     # proxy.noProxy = "127.0.0.1,localhost,internal.domain";
     # Open ports in the firewall.
-    # firewall.allowedTCPPorts = [ ... ];
-    # firewall.allowedUDPPorts = [ ... ];
-    # Or disable the firewall altogether.
-    # firewall.enable = false;
+    firewall = {
+      enable = true;
+      allowedTCPPorts = [ 
+        443                           #HTTPS
+        80                            #HTTP
+        8080                          #HTTP Alternate
+        22                            #SSH
+        53                            #DNS
+        1194                          #Openvpn
+        27036                         #Steam ; Remote Play
+        27015                         #Steam ; SRCDS Rcon port
+        ];
+      allowedUDPPorts = [
+        443                           #HTTPS
+        80                            #HTTP
+        8080                          #HTTP Alternate
+        22                            #SSH
+        53                            #DNS
+        1194                          #Openvpn
+        4380                          #Steam
+        27015                         #Steam : gameplay traffic
+        3478                          #Steam : Steamworks P2P Networking and Steam Voice Chat
+        4379                          #Steam : Steamworks P2P Networking and Steam Voice Chat
+        4380                          #Steam : Steamworks P2P Networking and Steam Voice Chat
+      ];
+      allowedTCPPortRanges = [
+        { from = 27015; to = 27030; } # Steam : To log into Steam and download content
+        { from = 19302; to = 19309; } # Google : meet
+        { from = 1714;  to = 1764;  } # KDE Connect
+      ];
+      allowedUDPPortRanges = [
+        { from = 27015; to = 27030; } # Steam : To log into Steam and download content
+        { from = 27000; to = 27100; } # Steam : Game traffic
+        { from = 27031; to = 27036; } # Steam : Remote Play
+        { from = 19302; to = 19309; } # Google : meet
+        { from = 50000; to = 65535; } # Discord
+      ];
+    };
   };
 
   time.timeZone = "Asia/Jakarta";
@@ -96,37 +130,69 @@
       alsa.enable = true;
       alsa.support32Bit = true;
       pulse.enable = true;
-      # If you want to use JACK applications, uncomment this
       jack.enable = true;
-      # use the example session manager (no others are packaged yet so this is enabled by default,
-      # no need to redefine it in your config for now)
-      #media-session.enable = true;
+    };
+    gnome = {
+      games.enable = false;
+      chrome-gnome-shell.enable = true;
+    };
+    tlp = {
+      enable = true;
+      #settings = {
+      #  "SOUND_POWER_SAVE_ON_AC" = 0;
+      #  "SOUND_POWER_SAVE_ON_BAT" = 1;
+      #  "SOUND_POWER_SAVE_CONTROLLER" = "Y";
+      #  "BAY_POWEROFF_ON_AC" = 0;
+      #  "BAY_POWEROFF_ON_BAT" = 1;
+      #  "DISK_APM_LEVEL_ON_AC" = "254 254";
+      #  "DISK_APM_LEVEL_ON_BAT" = "128 128";
+      #  "DISK_IOSCHED" = "none none";
+      #  "SATA_LINKPWR_ON_AC" = "med_power_with_dipm max_performance";
+      #  "SATA_LINKPWR_ON_BAT" = "min_power";
+      #  "MAX_LOST_WORK_SECS_ON_AC" = 15;
+      #  "MAX_LOST_WORK_SECS_ON_BAT" = 60;
+      #  "NMI_WATCHDOG" = 0;
+      #  "WIFI_PWR_ON_AC" = "off";
+      #  "WIFI_PWR_ON_BAT" = "on";
+      #  "WOL_DISABLE" = "Y";
+      #  "CPU_SCALING_GOVERNOR_ON_AC" = "powersave";
+      #  "CPU_SCALING_GOVERNOR_ON_BAT" = "powersave";
+      #  "CPU_MIN_PERF_ON_AC" = 0;
+      #  "CPU_MAX_PERF_ON_AC" = 100;
+      #  "CPU_MIN_PERF_ON_BAT" = 0;
+      #  "CPU_MAX_PERF_ON_BAT" = 50;
+      #  "CPU_BOOST_ON_AC" = 1;
+      #  "CPU_BOOST_ON_BAT" = 1;
+      #  "SCHED_POWERSAVE_ON_AC" = 0;
+      #  "SCHED_POWERSAVE_ON_BAT" = 1;
+      #  "ENERGY_PERF_POLICY_ON_AC" = "performance";
+      #  "ENERGY_PERF_POLICY_ON_BAT" = "power";
+      #  "RESTORE_DEVICE_STATE_ON_STARTUP" = 0;
+      #  "RUNTIME_PM_ON_AC" = "on";
+      #  "RUNTIME_PM_ON_BAT" = "auto";
+      #  "PCIE_ASPM_ON_AC" = "default";
+      #  "PCIE_ASPM_ON_BAT" = "powersupersave";
+      #  "USB_AUTOSUSPEND" = 0;
+      #};
     };
     # openssh.enable = true;
+    power-profiles-daemon.enable = false;
     earlyoom.enable = true;
     fstrim.enable = true;
     flatpak.enable = true;
     printing.enable = true;
   };
 
-  # List services configure:
-  services = {
-    gnome = {
-      games.enable = false;
-      chrome-gnome-shell.enable = true;
-    };
-  };
-
   hardware = {
     opengl = {
       driSupport = true;
       driSupport32Bit = true;
-      extraPackages = with pkgs; [
-        intel-compute-runtime
-        intel-media-driver
-        vaapiIntel         
-        vaapiVdpau
-        libvdpau-va-gl
+      extraPackages = [
+        pkgs.intel-compute-runtime
+        pkgs.intel-media-driver
+        pkgs.vaapiIntel         
+        pkgs.vaapiVdpau
+        pkgs.libvdpau-va-gl
       ];
     };
     cpu.intel.updateMicrocode = true;
@@ -141,7 +207,11 @@
       enable = true;
       wheelNeedsPassword = true;
       extraRules = [
-        { groups = [ "wheel" ]; noPass = false; keepEnv = true; persist = true; }
+        {
+          groups = [ "wheel" ];
+          noPass = false;
+          keepEnv = true;
+          persist = true; }
       ];
     };
   };
@@ -149,7 +219,7 @@
   users = {
     users.aviv = {
       isNormalUser = true;
-      extraGroups = [ "wheel" "networkmanager"];
+      extraGroups = [ "wheel" "networkmanager" "libvirtd" ];
     };
   };
   
@@ -161,52 +231,55 @@
   # List packages installed in system profile.
   environment = {
     systemPackages = with pkgs; [
+      # virtualisation
+      virt-manager
+      
       # graphic
       gimp
+      
       # office
       libreoffice
-      # customize
-      gnome.gnome-tweaks
-      nordic
-      nordic-polar
-      papirus-icon-theme
-      capitaine-cursors
-      # Media
-      celluloid
-      # FileSystemSupport
-      exfat
-      e2fsprogs
-      f2fs-tools
-      dosfstools
-      hfsprogs
-      jfsutils
-      util-linux
-      cryptsetup
-      lvm2
-      nilfs-utils
-      ntfs3g
-      udftools
-      xfsprogs
-      zfs
-      btrfs-progs
+      
       # SystemTools
       nano
       wget
       gparted
+      
       # Internet
       firefox
       discord
-      #gnomeExtension
-      gnomeExtensions.dash-to-dock
-      gnomeExtensions.dash-to-panel
-      gnomeExtensions.just-perfection
-      gnomeExtensions.user-themes
+      
+      # FileSystemSupport
+      zfs
+      lvm2
+      exfat
+      ntfs3g
+      hfsprogs
+      jfsutils
+      udftools
+      xfsprogs
+      e2fsprogs
+      f2fs-tools
+      dosfstools
+      util-linux
+      cryptsetup
+      nilfs-utils
+      btrfs-progs
+      
+      # customize
+      nordic
+      nordic-polar
+      capitaine-cursors
+      papirus-icon-theme
+      gnome.gnome-tweaks
+      
+      # gnomeExtension
       gnomeExtensions.caffeine
-      gnomeExtensions.clipboard-indicator
-      gnomeExtensions.panel-osd
-      gnomeExtensions.topicons-plus
       gnomeExtensions.gsconnect
-      gnomeExtensions.remove-dropdown-arrows
+      gnomeExtensions.user-themes
+      gnomeExtensions.blur-my-shell
+      gnomeExtensions.just-perfection
+      gnomeExtensions.clipboard-indicator
       gnomeExtensions.status-area-horizontal-spacing
     ];
   };
@@ -217,8 +290,11 @@
       enable = true;
       enableSSHSupport = true;
     };
+    dconf.enable = true;
    steam.enable = true;
   };
+
+  virtualisation.libvirtd.enable = true;
 
   system.stateVersion = "21.05";
 
