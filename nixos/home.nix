@@ -54,6 +54,23 @@
         };
         extraConfig = builtins.readFile ./config.vim;
       };
+      vscode = {
+        enable = true;
+        #package = pkgs.vscodium;
+        userSettings = {
+            "editor.fontFamily" = "Fira Code";
+            "editor.fontLigatures" = true;
+            "workbench.colorTheme" = "Nord";
+            "workbench.startupEditor" = "newUntitledFile";
+            "editor.minimap.enabled" = false;
+            "workbench.iconTheme" = "vscode-icons";
+            "redhat.telemetry.enabled" = true;
+            "vsicons.dontShowNewVersionMessage" = true;
+            "window.menuBarVisibility" = "toggle";
+            "explorer.confirmDelete" = false;
+            "files.trimTrailingWhitespace" = true;
+          };
+      };
   };
   home = {
     username = "aviv";
@@ -81,7 +98,6 @@
       # etc
       git
       tree
-      vscode
     ];
     stateVersion = "21.05";
   };
