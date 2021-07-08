@@ -35,12 +35,16 @@
           clang_complete
           a-vim
           autoload_cscope-vim
+          haskell-vim
           vim-colemak
           vim-surround
           vim-snippets
           vim-fugitive
           vim-javascript
           vim-css-color
+          vim-stylish-haskell
+          vim-haskell-module-name
+          vim-haskellConcealPlus
         ];
         settings = {
           tabstop = 4 ;
@@ -56,7 +60,7 @@
     homeDirectory = "/home/aviv";
     sessionVariables = {
       TERM = "xterm-256color";
-      EDITOR = "vim";
+      EDITOR = "nano";
     };
     packages = with pkgs; [
       # Haskell
