@@ -8,15 +8,11 @@ let mapleader =","
 let maplocalleader="\<space>"
 "set configuration
 set wrap
-set number
 set t_Co=256
 set autoread
-set tabstop=4
-set expandtab
 set autowrite
 set noshowmode
 set laststatus=2
-set shiftwidth=4
 set encoding=utf-8
 set hlsearch
 set foldmethod=syntax
